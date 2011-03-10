@@ -1,0 +1,10 @@
+name: CraftWorlds
+main: me.furt.craftworlds.CraftWorlds
+version: 0.2
+author: furt
+description: A test plugin to start a new world and port to it
+commands:
+  world:
+    description: World commands
+    usage: |
+           /<command> [create:list:port]
