@@ -37,7 +37,7 @@ public class CraftWorlds extends JavaPlugin {
 	public void onEnable() {
 		PluginManager pm = getServer().getPluginManager();
 		pm.registerEvent(Event.Type.PLAYER_CHAT, this.PlayerListener,
-				Event.Priority.Normal, this);
+				Event.Priority.Monitor, this);
 		CWConfig.Load(getConfiguration());
 		checkConfig();
 		sqlConnection();
