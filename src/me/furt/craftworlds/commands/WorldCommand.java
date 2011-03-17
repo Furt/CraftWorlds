@@ -1,4 +1,12 @@
-package me.furt.craftworlds;
+package me.furt.craftworlds.commands;
+
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.logging.Level;
+
+import me.furt.craftworlds.CraftWorlds;
+import me.furt.craftworlds.sql.CWConnector;
 
 import org.bukkit.ChatColor;
 import org.bukkit.World;
@@ -75,10 +83,29 @@ public class WorldCommand implements CommandExecutor {
 			plugin.getServer().broadcastMessage(
 					ChatColor.YELLOW + args[1] + " created!");
 
-			// TODO add config save function
+			this.addWorld(sender, args[1], args[2]);
 			return true;
 		}
 		return false;
+	}
+
+	private void addWorld(CommandSender sender, String string, String string2) {
+		Connection conn = null;
+		Statement stmt = null;
+		int count = 0;
+		try {
+			conn = CWConnector.getConnection();
+			stmt = conn.createStatement();
+			count += stmt.executeUpdate("INSERT INTO `worlds`"
+					+ " (`name`, `world`, `enabled`)"
+					+ " VALUES ('" + string + "', '" + string2 + "', 'true')");
+			stmt.close();
+		} catch (SQLException ex) {
+			CraftWorlds.log.log(Level.SEVERE,
+					"[CraftWorlds]: Find SQL Exception", ex);
+			sender.sendMessage("World did not save but is loaded.");
+		}
+		
 	}
 
 }
