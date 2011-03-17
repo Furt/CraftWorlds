@@ -69,12 +69,14 @@ public class CraftWorlds extends JavaPlugin {
 			rs = ps.executeQuery();
 			conn.commit();
 			while (rs.next()) {
-				if (rs.getString("environment").equalsIgnoreCase("normal")) {
-					this.getServer().createWorld(rs.getString("name"),
-							Environment.NORMAL);
-				} else {
-					this.getServer().createWorld(rs.getString("name"),
-							Environment.NETHER);
+				if (rs.getString("enabled").equalsIgnoreCase("true")) {
+					if (rs.getString("environment").equalsIgnoreCase("normal")) {
+						this.getServer().createWorld(rs.getString("name"),
+								Environment.NORMAL);
+					} else {
+						this.getServer().createWorld(rs.getString("name"),
+								Environment.NETHER);
+					}
 				}
 
 			}

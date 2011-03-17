@@ -1,6 +1,8 @@
 package me.furt.craftworlds.commands;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.logging.Level;
@@ -94,7 +96,87 @@ public class WorldCommand implements CommandExecutor {
 			sender.sendMessage(ChatColor.YELLOW + "World is now saved.");
 			return true;
 		}
+
+		if (args[0].equalsIgnoreCase("disable")) {
+			Connection conn = null;
+			Statement stmt = null;
+			int count = 0;
+			try {
+				conn = CWConnector.getConnection();
+				stmt = conn.createStatement();
+				count += stmt
+						.executeUpdate("UPDATE `worlds` SET `enabled` = 'false' WHERE `name` = '"
+								+ args[1] + "'");
+				sender.sendMessage(args[1]
+						+ " is disabled, remember u must restart to finish the process.");
+			} catch (SQLException ex) {
+				sender.sendMessage("World - " + args[1] + " could not be found.");
+			}
+			return true;
+		}
+
+		if (args[0].equalsIgnoreCase("enable")) {
+			Connection conn = null;
+			Statement stmt = null;
+			int count = 0;
+			try {
+				conn = CWConnector.getConnection();
+				stmt = conn.createStatement();
+				count += stmt
+						.executeUpdate("UPDATE `worlds` SET `enabled` = 'true' WHERE `name` = '"
+								+ args[1] + "'");
+				stmt.close();
+				this.loadWorld(args[1]);
+				sender.sendMessage(args[1] + " has been enabled.");
+			} catch (SQLException ex) {
+				sender.sendMessage("World - " + args[1] + " could not be found.");
+			}
+			return true;
+		}
 		return false;
+	}
+
+	private void loadWorld(String string) {
+		Connection conn = null;
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+		try {
+			conn = CWConnector.getConnection();
+			ps = conn.prepareStatement("Select * from `worlds` WHERE name = '"
+					+ string + "'");
+			rs = ps.executeQuery();
+			conn.commit();
+			while (rs.next()) {
+				if (string.equalsIgnoreCase(rs.getString("name"))) {
+					if (rs.getString("environment").equalsIgnoreCase("normal")) {
+						plugin.getServer().createWorld(rs.getString("name"),
+								Environment.NORMAL);
+					} else {
+						plugin.getServer().createWorld(rs.getString("name"),
+								Environment.NETHER);
+					}
+				}
+
+			}
+		} catch (SQLException ex) {
+			CraftWorlds.log.log(Level.SEVERE,
+					"[CraftWorlds]: Find SQL Exception", ex);
+		} finally {
+			try {
+				if (ps != null) {
+					ps.close();
+				}
+				if (rs != null) {
+					rs.close();
+				}
+				if (conn != null)
+					conn.close();
+			} catch (SQLException ex) {
+				CraftWorlds.log.log(Level.SEVERE,
+						"[CraftWorlds]: Found SQL Exception (on close)");
+			}
+		}
+
 	}
 
 	private void addWorld(CommandSender sender, String string, String string2) {
@@ -109,9 +191,7 @@ public class WorldCommand implements CommandExecutor {
 					+ string + "', '" + string2 + "', 'true')");
 			stmt.close();
 		} catch (SQLException ex) {
-			CraftWorlds.log.log(Level.SEVERE,
-					"[CraftWorlds]: Find SQL Exception", ex);
-			sender.sendMessage("World did not save but is loaded.");
+			sender.sendMessage("[CraftWorlds] World did not save but is loaded.");
 		}
 
 	}
