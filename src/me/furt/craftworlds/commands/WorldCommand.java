@@ -30,8 +30,15 @@ public class WorldCommand implements CommandExecutor {
 			return false;
 
 		if (args[0].equalsIgnoreCase("port")) {
+			if (!plugin.isPlayer(sender)) {
+				CraftWorlds.log
+						.info("[CraftWorlds] Cannot use /world port from console.");
+				return true;
+			}
+
 			if (args.length == 1)
 				return false;
+
 			World world = plugin.getServer().getWorld(args[1]);
 			if (world != null) {
 				Player player = (Player) sender;
@@ -83,7 +90,8 @@ public class WorldCommand implements CommandExecutor {
 			plugin.getServer().broadcastMessage(
 					ChatColor.YELLOW + args[1] + " created!");
 
-			this.addWorld(sender, args[1], args[2]);
+			this.addWorld(sender, args[1], env.toString());
+			sender.sendMessage(ChatColor.YELLOW + "World is now saved.");
 			return true;
 		}
 		return false;
@@ -96,16 +104,16 @@ public class WorldCommand implements CommandExecutor {
 		try {
 			conn = CWConnector.getConnection();
 			stmt = conn.createStatement();
-			count += stmt.executeUpdate("INSERT INTO `worlds`"
-					+ " (`name`, `world`, `enabled`)"
-					+ " VALUES ('" + string + "', '" + string2 + "', 'true')");
+			count += stmt.executeUpdate("REPLACE INTO `worlds`"
+					+ " (`name`, `environment`, `enabled`)" + " VALUES ('"
+					+ string + "', '" + string2 + "', 'true')");
 			stmt.close();
 		} catch (SQLException ex) {
 			CraftWorlds.log.log(Level.SEVERE,
 					"[CraftWorlds]: Find SQL Exception", ex);
 			sender.sendMessage("World did not save but is loaded.");
 		}
-		
+
 	}
 
 }

@@ -15,6 +15,8 @@ import me.furt.craftworlds.commands.WorldCommand;
 import me.furt.craftworlds.sql.CWConnector;
 
 import org.bukkit.World.Environment;
+import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -23,19 +25,38 @@ public class CraftWorlds extends JavaPlugin {
 
 	@Override
 	public void onDisable() {
-
+		PluginDescriptionFile pdfFile = this.getDescription();
+		log.info(pdfFile.getName() + " Disabled");
 	}
 
 	@Override
 	public void onEnable() {
 		CWConfig.Load(getConfiguration());
 		checkConfig();
+		sqlConnection();
 		loadWorlds();
 		getCommand("world").setExecutor(new WorldCommand(this));
 		PluginDescriptionFile pdfFile = this.getDescription();
 		log.info(pdfFile.getName() + " v" + pdfFile.getVersion()
 				+ " is enabled!");
 
+	}
+
+	public void sqlConnection() {
+		Connection conn = CWConnector.createConnection();
+
+		if (conn == null) {
+			log.log(Level.SEVERE,
+					"[CraftWorlds] Could not establish SQL connection. Disabling CraftWorlds");
+			getServer().getPluginManager().disablePlugin(this);
+			return;
+		} else {
+			try {
+				conn.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 
 	private void loadWorlds() {
@@ -49,10 +70,10 @@ public class CraftWorlds extends JavaPlugin {
 			conn.commit();
 			while (rs.next()) {
 				if (rs.getString("environment").equalsIgnoreCase("normal")) {
-					this.getServer().createWorld(rs.getString("world"),
+					this.getServer().createWorld(rs.getString("name"),
 							Environment.NORMAL);
 				} else {
-					this.getServer().createWorld(rs.getString("world"),
+					this.getServer().createWorld(rs.getString("name"),
 							Environment.NETHER);
 				}
 
@@ -95,6 +116,14 @@ public class CraftWorlds extends JavaPlugin {
 		} else {
 		}
 
+	}
+
+	public boolean isPlayer(CommandSender sender) {
+		if (!(sender instanceof Player)) {
+			return false;
+		} else {
+			return true;
+		}
 	}
 
 }

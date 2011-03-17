@@ -1,8 +1,8 @@
 name: CraftWorlds
 main: me.furt.craftworlds.CraftWorlds
-version: 0.2
+version: 0.3
 author: furt
-description: A test plugin to start a new world and port to it
+description: A plugin that supports multiworld creation, teleport, and load.
 commands:
   world:
     description: World commands
