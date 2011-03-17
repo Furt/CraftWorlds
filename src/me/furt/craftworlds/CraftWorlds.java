@@ -12,16 +12,20 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import me.furt.craftworlds.commands.WorldCommand;
+import me.furt.craftworlds.listeners.CWPlayerListener;
 import me.furt.craftworlds.sql.CWConnector;
 
 import org.bukkit.World.Environment;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Event;
 import org.bukkit.plugin.PluginDescriptionFile;
+import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class CraftWorlds extends JavaPlugin {
 	public static final Logger log = Logger.getLogger("Minecraft");
+	public CWPlayerListener PlayerListener = new CWPlayerListener(this);
 
 	@Override
 	public void onDisable() {
@@ -31,6 +35,9 @@ public class CraftWorlds extends JavaPlugin {
 
 	@Override
 	public void onEnable() {
+		PluginManager pm = getServer().getPluginManager();
+		pm.registerEvent(Event.Type.PLAYER_CHAT, this.PlayerListener,
+				Event.Priority.Normal, this);
 		CWConfig.Load(getConfiguration());
 		checkConfig();
 		sqlConnection();
@@ -54,7 +61,6 @@ public class CraftWorlds extends JavaPlugin {
 			try {
 				conn.close();
 			} catch (SQLException e) {
-				e.printStackTrace();
 			}
 		}
 	}

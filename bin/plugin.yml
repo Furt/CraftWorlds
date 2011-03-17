@@ -1,6 +1,6 @@
 name: CraftWorlds
 main: me.furt.craftworlds.CraftWorlds
-version: 0.3
+version: 0.4
 author: furt
 description: A plugin that supports multiworld creation, teleport, and load.
 commands:
