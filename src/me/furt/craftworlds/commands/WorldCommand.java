@@ -32,6 +32,14 @@ public class WorldCommand implements CommandExecutor {
 			return false;
 
 		if (args[0].equalsIgnoreCase("port")) {
+			if (plugin.isPlayer(sender)) {
+				if (!CraftWorlds.Permissions.has((Player) sender,
+						"craftworlds.port")) {
+					sender.sendMessage(ChatColor.YELLOW
+							+ "You to dont have proper permissions for that command.");
+					return true;
+				}
+			}
 			if (!plugin.isPlayer(sender)) {
 				CraftWorlds.log
 						.info("[CraftWorlds] Cannot use /world port from console.");
@@ -43,6 +51,14 @@ public class WorldCommand implements CommandExecutor {
 
 			World world = plugin.getServer().getWorld(args[1]);
 			if (world != null) {
+				if (plugin.isPlayer(sender)) {
+					if (!CraftWorlds.Permissions.has((Player) sender,
+							"craftworlds." + world.getName().toLowerCase())) {
+						sender.sendMessage(ChatColor.YELLOW
+								+ "You to dont have permission to teleport to that world.");
+						return true;
+					}
+				}
 				Player player = (Player) sender;
 				player.teleportTo(world.getSpawnLocation());
 			} else {
@@ -52,6 +68,14 @@ public class WorldCommand implements CommandExecutor {
 		}
 
 		if (args[0].equalsIgnoreCase("list")) {
+			if (plugin.isPlayer(sender)) {
+				if (!CraftWorlds.Permissions.has((Player) sender,
+						"craftworlds.list")) {
+					sender.sendMessage(ChatColor.YELLOW
+							+ "You to dont have proper permissions for that command.");
+					return true;
+				}
+			}
 			sender.sendMessage(ChatColor.YELLOW
 					+ "Worlds running on this Server");
 			for (int i = 0; i < plugin.getServer().getWorlds().size(); i++) {
@@ -70,6 +94,14 @@ public class WorldCommand implements CommandExecutor {
 		}
 
 		if (args[0].equalsIgnoreCase("create")) {
+			if (plugin.isPlayer(sender)) {
+				if (!CraftWorlds.Permissions.has((Player) sender,
+						"craftworlds.create")) {
+					sender.sendMessage(ChatColor.YELLOW
+							+ "You to dont have proper permissions for that command.");
+					return true;
+				}
+			}
 			World world = plugin.getServer().getWorld(args[1]);
 			if (world != null) {
 				sender.sendMessage(ChatColor.YELLOW + world.getName()
@@ -98,6 +130,14 @@ public class WorldCommand implements CommandExecutor {
 		}
 
 		if (args[0].equalsIgnoreCase("disable")) {
+			if (plugin.isPlayer(sender)) {
+				if (!CraftWorlds.Permissions.has((Player) sender,
+						"craftworlds.disable")) {
+					sender.sendMessage(ChatColor.YELLOW
+							+ "You to dont have proper permissions for that command.");
+					return true;
+				}
+			}
 			Connection conn = null;
 			Statement stmt = null;
 			int count = 0;
@@ -116,6 +156,14 @@ public class WorldCommand implements CommandExecutor {
 		}
 
 		if (args[0].equalsIgnoreCase("enable")) {
+			if (plugin.isPlayer(sender)) {
+				if (!CraftWorlds.Permissions.has((Player) sender,
+						"craftworlds.enable")) {
+					sender.sendMessage(ChatColor.YELLOW
+							+ "You to dont have proper permissions for that command.");
+					return true;
+				}
+			}
 			Connection conn = null;
 			Statement stmt = null;
 			int count = 0;

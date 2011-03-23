@@ -1,9 +1,5 @@
 package me.furt.craftworlds;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -19,12 +15,17 @@ import org.bukkit.World.Environment;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import com.nijiko.permissions.PermissionHandler;
+import com.nijikokun.bukkit.Permissions.Permissions;
+
 public class CraftWorlds extends JavaPlugin {
 	public static final Logger log = Logger.getLogger("Minecraft");
+	public static PermissionHandler Permissions;
 	public CWPlayerListener PlayerListener = new CWPlayerListener(this);
 
 	@Override
@@ -38,8 +39,10 @@ public class CraftWorlds extends JavaPlugin {
 		PluginManager pm = getServer().getPluginManager();
 		pm.registerEvent(Event.Type.PLAYER_CHAT, this.PlayerListener,
 				Event.Priority.Monitor, this);
+		pm.registerEvent(Event.Type.PLAYER_MOVE, this.PlayerListener,
+				Event.Priority.Monitor, this);
+		setupPermissions();
 		CWConfig.Load(getConfiguration());
-		checkConfig();
 		sqlConnection();
 		loadWorlds();
 		getCommand("world").setExecutor(new WorldCommand(this));
@@ -61,6 +64,19 @@ public class CraftWorlds extends JavaPlugin {
 			try {
 				conn.close();
 			} catch (SQLException e) {
+			}
+		}
+	}
+	
+	private void setupPermissions() {
+		Plugin test = this.getServer().getPluginManager()
+				.getPlugin("Permissions");
+
+		if (CraftWorlds.Permissions == null) {
+			if (test != null) {
+				CraftWorlds.Permissions = ((Permissions) test).getHandler();
+			} else {
+				log.info("Permission system not detected, defaulting to OP");
 			}
 		}
 	}
@@ -104,26 +120,6 @@ public class CraftWorlds extends JavaPlugin {
 						"[CraftWorlds]: Find SQL Exception (on close)");
 			}
 		}
-	}
-
-	private void checkConfig() {
-		if (!this.getDataFolder().exists())
-			this.getDataFolder().mkdirs();
-		if (!new File(getDataFolder(), "config.yml").exists()) {
-			try {
-				new File(this.getDataFolder(), "config.yml").createNewFile();
-				FileWriter fstream = new FileWriter(new File(getDataFolder(),
-						"config.yml"));
-				BufferedWriter out = new BufferedWriter(fstream);
-				out.close();
-				fstream.close();
-			} catch (IOException ex) {
-				setEnabled(false);
-			}
-			log.info("[CraftWorlds] config.yml not found, creating.");
-		} else {
-		}
-
 	}
 
 	public boolean isPlayer(CommandSender sender) {
