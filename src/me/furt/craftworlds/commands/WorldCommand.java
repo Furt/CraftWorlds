@@ -60,7 +60,12 @@ public class WorldCommand implements CommandExecutor {
 					}
 				}
 				Player player = (Player) sender;
-				player.teleportTo(world.getSpawnLocation());
+				player.teleport(world.getSpawnLocation());
+				try {
+					Thread.sleep(1000);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
 			} else {
 				sender.sendMessage("World not found.");
 			}

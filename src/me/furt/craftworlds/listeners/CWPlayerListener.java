@@ -61,16 +61,32 @@ public class CWPlayerListener extends PlayerListener {
 							sign.getLine(1).toString());
 					if (world != null) {
 						// TODO spawn port
-						if(sign.getLine(2).equalsIgnoreCase("spawn")) {
+						if (sign.getLine(2).equalsIgnoreCase("spawn")) {
 							Location sl = world.getSpawnLocation();
 							event.setTo(sl);
-							player.teleportTo(sl);
+							player.teleport(sl);
+							try {
+								Thread.sleep(1000);
+							} catch (InterruptedException e) {
+								e.printStackTrace();
+							}
 						}
-						
+
 					}
 				}
 			}
 		}
 	}
+
+	/*public void onPlayerTeleport(PlayerMoveEvent event) {
+		Player player = event.getPlayer();
+		Location teleTo = event.getTo();
+		String world = teleTo.getWorld().getName();
+		if (!CraftWorlds.Permissions.has(player, "craftworlds." + world)) {
+			player.sendMessage(ChatColor.YELLOW
+					+ "You to dont have permission to go there.");
+			event.setCancelled(true);
+		}
+	}*/
 
 }

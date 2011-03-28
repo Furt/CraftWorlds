@@ -67,7 +67,7 @@ public class CraftWorlds extends JavaPlugin {
 			}
 		}
 	}
-	
+
 	private void setupPermissions() {
 		Plugin test = this.getServer().getPluginManager()
 				.getPlugin("Permissions");
