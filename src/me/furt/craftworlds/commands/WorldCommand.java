@@ -155,7 +155,8 @@ public class WorldCommand implements CommandExecutor {
 				sender.sendMessage(args[1]
 						+ " is disabled, remember u must restart to finish the process.");
 			} catch (SQLException ex) {
-				sender.sendMessage("World - " + args[1] + " could not be found.");
+				sender.sendMessage("World - " + args[1]
+						+ " could not be found.");
 			}
 			return true;
 		}
@@ -182,7 +183,8 @@ public class WorldCommand implements CommandExecutor {
 				this.loadWorld(args[1]);
 				sender.sendMessage(args[1] + " has been enabled.");
 			} catch (SQLException ex) {
-				sender.sendMessage("World - " + args[1] + " could not be found.");
+				sender.sendMessage("World - " + args[1]
+						+ " could not be found.");
 			}
 			return true;
 		}

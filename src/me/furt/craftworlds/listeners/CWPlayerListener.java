@@ -21,12 +21,10 @@ public class CWPlayerListener extends PlayerListener {
 	CraftWorlds plugin;
 
 	public CWPlayerListener(CraftWorlds instance) {
-		// TODO Auto-generated constructor stub
 		this.plugin = instance;
 	}
 
 	public void onPlayerChat(PlayerChatEvent event) {
-		// TODO onPlayerChat
 		Player player = event.getPlayer();
 		String format = event.getFormat();
 		String world = player.getWorld().getName();
@@ -60,11 +58,17 @@ public class CWPlayerListener extends PlayerListener {
 					World world = plugin.getServer().getWorld(
 							sign.getLine(1).toString());
 					if (world != null) {
-						// TODO spawn port
 						if (sign.getLine(2).equalsIgnoreCase("spawn")) {
 							Location sl = world.getSpawnLocation();
-							event.setTo(sl);
-							player.teleport(sl);
+							if (CraftWorlds.Permissions.has(player,
+									"craftworlds."
+											+ world.getName().toLowerCase())) {
+								event.setTo(sl);
+								player.teleport(sl);
+							} else {
+								player.sendMessage("You do not have permission to use that portal.");
+								return;
+							}
 							try {
 								Thread.sleep(1000);
 							} catch (InterruptedException e) {
@@ -77,16 +81,4 @@ public class CWPlayerListener extends PlayerListener {
 			}
 		}
 	}
-
-	/*public void onPlayerTeleport(PlayerMoveEvent event) {
-		Player player = event.getPlayer();
-		Location teleTo = event.getTo();
-		String world = teleTo.getWorld().getName();
-		if (!CraftWorlds.Permissions.has(player, "craftworlds." + world)) {
-			player.sendMessage(ChatColor.YELLOW
-					+ "You to dont have permission to go there.");
-			event.setCancelled(true);
-		}
-	}*/
-
 }
