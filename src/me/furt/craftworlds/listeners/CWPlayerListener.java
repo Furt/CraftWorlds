@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import me.furt.craftworlds.CraftWorlds;
+import me.furt.craftworlds.Teleport;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -59,7 +60,8 @@ public class CWPlayerListener extends PlayerListener {
 							sign.getLine(1).toString());
 					if (world != null) {
 						if (sign.getLine(2).equalsIgnoreCase("spawn")) {
-							Location sl = world.getSpawnLocation();
+							Location sl = new Teleport(plugin)
+									.getDestination(world.getSpawnLocation());
 							if (CraftWorlds.Permissions.has(player,
 									"craftworlds."
 											+ world.getName().toLowerCase())) {
@@ -68,11 +70,6 @@ public class CWPlayerListener extends PlayerListener {
 							} else {
 								player.sendMessage("You do not have permission to use that portal.");
 								return;
-							}
-							try {
-								Thread.sleep(1000);
-							} catch (InterruptedException e) {
-								e.printStackTrace();
 							}
 						}
 

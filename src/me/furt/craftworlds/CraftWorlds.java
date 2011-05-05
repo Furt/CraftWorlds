@@ -1,16 +1,19 @@
 package me.furt.craftworlds;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.logging.Level;
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Logger;
 
+import javax.persistence.PersistenceException;
+
+import me.furt.craftworlds.commands.WeatherCommand;
 import me.furt.craftworlds.commands.WorldCommand;
 import me.furt.craftworlds.listeners.CWPlayerListener;
-import me.furt.craftworlds.sql.CWConnector;
+import me.furt.craftworlds.sql.WorldTable;
 
+import org.bukkit.World;
 import org.bukkit.World.Environment;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -41,31 +44,15 @@ public class CraftWorlds extends JavaPlugin {
 				Event.Priority.Monitor, this);
 		pm.registerEvent(Event.Type.PLAYER_MOVE, this.PlayerListener,
 				Event.Priority.Monitor, this);
-		setupPermissions();
-		CWConfig.Load(getConfiguration());
-		sqlConnection();
-		loadWorlds();
+		this.setupPermissions();
+		this.setupDatabase();
+		this.loadWorlds();
 		getCommand("world").setExecutor(new WorldCommand(this));
+		getCommand("weather").setExecutor(new WeatherCommand(this));
 		PluginDescriptionFile pdfFile = this.getDescription();
 		log.info(pdfFile.getName() + " v" + pdfFile.getVersion()
 				+ " is enabled!");
 
-	}
-
-	public void sqlConnection() {
-		Connection conn = CWConnector.createConnection();
-
-		if (conn == null) {
-			log.log(Level.SEVERE,
-					"[CraftWorlds] Could not establish SQL connection. Disabling CraftWorlds");
-			getServer().getPluginManager().disablePlugin(this);
-			return;
-		} else {
-			try {
-				conn.close();
-			} catch (SQLException e) {
-			}
-		}
 	}
 
 	private void setupPermissions() {
@@ -82,44 +69,50 @@ public class CraftWorlds extends JavaPlugin {
 	}
 
 	private void loadWorlds() {
-		Connection conn = null;
-		PreparedStatement ps = null;
-		ResultSet rs = null;
-		try {
-			conn = CWConnector.getConnection();
-			ps = conn.prepareStatement("Select * from `worlds`");
-			rs = ps.executeQuery();
-			conn.commit();
-			while (rs.next()) {
-				if (rs.getString("enabled").equalsIgnoreCase("true")) {
-					if (rs.getString("environment").equalsIgnoreCase("normal")) {
-						this.getServer().createWorld(rs.getString("name"),
-								Environment.NORMAL);
-					} else {
-						this.getServer().createWorld(rs.getString("name"),
-								Environment.NETHER);
-					}
-				}
-
+		List<WorldTable> getWorld = getDatabase().find(WorldTable.class)
+				.where().eq("worldEnabled", true).findList();
+		int count = getWorld.size();
+		for (int i = 0; i < count; i++) {
+			String wName = getWorld.get(i).getWorldName();
+			String env = getWorld.get(i).getEnvironment();
+			long seed = getWorld.get(i).getSeed();
+			boolean pvp = getWorld.get(i).isPvpEnabled();
+			if (seed == 0) {
+				this.getServer().createWorld(wName, Environment.valueOf(env));
+			} else {
+				this.getServer().createWorld(wName, Environment.valueOf(env),
+						seed);
 			}
-		} catch (SQLException ex) {
-			CraftWorlds.log.log(Level.SEVERE,
-					"[CraftWorlds]: Find SQL Exception", ex);
-		} finally {
-			try {
-				if (ps != null) {
-					ps.close();
-				}
-				if (rs != null) {
-					rs.close();
-				}
-				if (conn != null)
-					conn.close();
-			} catch (SQLException ex) {
-				CraftWorlds.log.log(Level.SEVERE,
-						"[CraftWorlds]: Find SQL Exception (on close)");
-			}
+			World world = this.getServer().getWorld(wName);
+			world.setPVP(pvp);
+			this.getServer().broadcastMessage(
+					"[CraftWorlds] Map: " + wName + " loaded.");
 		}
+
+	}
+
+	private void setupDatabase() {
+		try {
+			File ebeans = new File("ebean.properties");
+			if (!ebeans.exists()) {
+				try {
+					ebeans.createNewFile();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+			getDatabase().find(WorldTable.class).findRowCount();
+		} catch (PersistenceException ex) {
+			System.out.println("[CraftWorld] Installing database.");
+			installDDL();
+		}
+	}
+
+	@Override
+	public List<Class<?>> getDatabaseClasses() {
+		List<Class<?>> list = new ArrayList<Class<?>>();
+		list.add(WorldTable.class);
+		return list;
 	}
 
 	public boolean isPlayer(CommandSender sender) {

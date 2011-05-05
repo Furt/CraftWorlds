@@ -1,16 +1,11 @@
 package me.furt.craftworlds.commands;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.logging.Level;
-
 import me.furt.craftworlds.CraftWorlds;
-import me.furt.craftworlds.sql.CWConnector;
+import me.furt.craftworlds.Teleport;
+import me.furt.craftworlds.sql.WorldTable;
 
 import org.bukkit.ChatColor;
+import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.World.Environment;
 import org.bukkit.command.Command;
@@ -60,12 +55,9 @@ public class WorldCommand implements CommandExecutor {
 					}
 				}
 				Player player = (Player) sender;
-				player.teleport(world.getSpawnLocation());
-				try {
-					Thread.sleep(1000);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
+				Location loc = new Teleport(plugin).getDestination(world
+						.getSpawnLocation());
+				player.teleport(loc);
 			} else {
 				sender.sendMessage("World not found.");
 			}
@@ -107,147 +99,156 @@ public class WorldCommand implements CommandExecutor {
 					return true;
 				}
 			}
-			World world = plugin.getServer().getWorld(args[1]);
-			if (world != null) {
-				sender.sendMessage(ChatColor.YELLOW + world.getName()
+
+			if (worldExists(args[1])) {
+				sender.sendMessage(ChatColor.YELLOW + args[1]
 						+ " already exists...");
 				return true;
 			}
-			Environment env;
-			if (args.length == 2) {
-				env = Environment.NORMAL;
-			} else {
+			Environment env = Environment.NORMAL;
+			long seed = 0;
+			if (args.length > 2) {
 				if (args[2].equalsIgnoreCase("nether")) {
 					env = Environment.NETHER;
-				} else {
-					env = Environment.NORMAL;
 				}
+
+				if (args[2].equalsIgnoreCase("seed")) {
+					String string = this.stringBuilder(args);
+					String[] seedSplit = string.split("seed");
+					seed = Long.parseLong(seedSplit[1].replace(" ", ""), 36);
+				}
+
+				if ((args.length > 3) && (args[3].equalsIgnoreCase("seed"))) {
+					String string = this.stringBuilder(args);
+					String[] seedSplit = string.split("seed");
+					seed = Long.parseLong(seedSplit[1].replace(" ", ""), 36);
+				}
+
 			}
 			plugin.getServer().broadcastMessage(
 					ChatColor.YELLOW + "Attempting to create a new world...");
-			plugin.getServer().createWorld(args[1], env);
+			if (seed == 0) {
+				plugin.getServer().createWorld(args[1], env);
+			} else {
+				plugin.getServer().createWorld(args[1], env, seed);
+			}
+
+			WorldTable wt = new WorldTable();
+			wt.setWorldName(args[1]);
+			wt.setEnvironment(env.name());
+			wt.setSeed(seed);
+			wt.setPvpEnabled(true);
+			wt.setWorldEnabled(true);
+			plugin.getDatabase().save(wt);
+
 			plugin.getServer().broadcastMessage(
 					ChatColor.YELLOW + args[1] + " created!");
-
-			this.addWorld(sender, args[1], env.toString());
-			sender.sendMessage(ChatColor.YELLOW + "World is now saved.");
 			return true;
 		}
 
-		if (args[0].equalsIgnoreCase("disable")) {
+		if (args[0].equalsIgnoreCase("delete")) {
 			if (plugin.isPlayer(sender)) {
 				if (!CraftWorlds.Permissions.has((Player) sender,
-						"craftworlds.disable")) {
+						"craftworlds.delete")) {
 					sender.sendMessage(ChatColor.YELLOW
 							+ "You to dont have proper permissions for that command.");
 					return true;
 				}
 			}
-			Connection conn = null;
-			Statement stmt = null;
-			int count = 0;
-			try {
-				conn = CWConnector.getConnection();
-				stmt = conn.createStatement();
-				count += stmt
-						.executeUpdate("UPDATE `worlds` SET `enabled` = 'false' WHERE `name` = '"
-								+ args[1] + "'");
-				sender.sendMessage(args[1]
-						+ " is disabled, remember u must restart to finish the process.");
-			} catch (SQLException ex) {
-				sender.sendMessage("World - " + args[1]
-						+ " could not be found.");
+
+			WorldTable wt = plugin.getDatabase().find(WorldTable.class).where()
+					.ieq("worldName", args[1]).findUnique();
+			if (wt != null) {
+				plugin.getDatabase().delete(wt);
+				sender.sendMessage(ChatColor.YELLOW + args[1]
+						+ " deleted, please restart to finish the proccess.");
+			} else {
+				sender.sendMessage(ChatColor.YELLOW + args[1]
+						+ " not found, did you spell it correctly?");
 			}
 			return true;
 		}
 
-		if (args[0].equalsIgnoreCase("enable")) {
+		if (args[0].equalsIgnoreCase("set")) {
 			if (plugin.isPlayer(sender)) {
 				if (!CraftWorlds.Permissions.has((Player) sender,
-						"craftworlds.enable")) {
+						"craftworlds.set")) {
 					sender.sendMessage(ChatColor.YELLOW
 							+ "You to dont have proper permissions for that command.");
 					return true;
 				}
 			}
-			Connection conn = null;
-			Statement stmt = null;
-			int count = 0;
-			try {
-				conn = CWConnector.getConnection();
-				stmt = conn.createStatement();
-				count += stmt
-						.executeUpdate("UPDATE `worlds` SET `enabled` = 'true' WHERE `name` = '"
-								+ args[1] + "'");
-				stmt.close();
-				this.loadWorld(args[1]);
-				sender.sendMessage(args[1] + " has been enabled.");
-			} catch (SQLException ex) {
-				sender.sendMessage("World - " + args[1]
-						+ " could not be found.");
+			World world = plugin.getServer().getWorld(args[1]);
+			if (world == null) {
+				sender.sendMessage(ChatColor.YELLOW + args[1]
+						+ " not found, did you spell it correctly?");
+				return true;
+			}
+
+			if (args[2].equalsIgnoreCase("toggle")) {
+				WorldTable wt = plugin.getDatabase().find(WorldTable.class)
+						.where().ieq("worldName", world.getName()).findUnique();
+				if (wt == null) {
+					sender.sendMessage("We got a problem!");
+					return true;
+				}
+				if (wt.isWorldEnabled()) {
+					wt.setWorldEnabled(false);
+					sender.sendMessage(ChatColor.YELLOW
+							+ world.getName()
+							+ " is now disabled, please restart to finish the proccess.");
+				} else {
+					wt.setWorldEnabled(true);
+					sender.sendMessage(ChatColor.YELLOW
+							+ world.getName()
+							+ " is now enabled, please restart to finish the proccess.");
+				}
+				plugin.getDatabase().save(wt);
+				return true;
+			}
+
+			if (args[2].equalsIgnoreCase("pvp")) {
+				WorldTable wt = plugin.getDatabase().find(WorldTable.class)
+						.where().ieq("worldName", world.getName()).findUnique();
+				if (wt == null) {
+					sender.sendMessage("We got a problem!");
+					return true;
+				}
+				if (wt.isPvpEnabled()) {
+					wt.setPvpEnabled(false);
+					world.setPVP(false);
+					plugin.getServer().broadcastMessage(
+							ChatColor.YELLOW + "PVP is now disabled on "
+									+ world.getName());
+				} else {
+					wt.setPvpEnabled(true);
+					world.setPVP(true);
+					plugin.getServer().broadcastMessage(
+							ChatColor.YELLOW + "PVP is now enabled on "
+									+ world.getName());
+				}
+				plugin.getDatabase().save(wt);
 			}
 			return true;
 		}
 		return false;
 	}
 
-	private void loadWorld(String string) {
-		Connection conn = null;
-		PreparedStatement ps = null;
-		ResultSet rs = null;
-		try {
-			conn = CWConnector.getConnection();
-			ps = conn.prepareStatement("Select * from `worlds` WHERE name = '"
-					+ string + "'");
-			rs = ps.executeQuery();
-			conn.commit();
-			while (rs.next()) {
-				if (string.equalsIgnoreCase(rs.getString("name"))) {
-					if (rs.getString("environment").equalsIgnoreCase("normal")) {
-						plugin.getServer().createWorld(rs.getString("name"),
-								Environment.NORMAL);
-					} else {
-						plugin.getServer().createWorld(rs.getString("name"),
-								Environment.NETHER);
-					}
-				}
+	private boolean worldExists(String name) {
+		WorldTable getWorld = plugin.getDatabase().find(WorldTable.class)
+				.where().ieq("worldName", name).findUnique();
+		if (getWorld == null)
+			return false;
 
-			}
-		} catch (SQLException ex) {
-			CraftWorlds.log.log(Level.SEVERE,
-					"[CraftWorlds]: Find SQL Exception", ex);
-		} finally {
-			try {
-				if (ps != null) {
-					ps.close();
-				}
-				if (rs != null) {
-					rs.close();
-				}
-				if (conn != null)
-					conn.close();
-			} catch (SQLException ex) {
-				CraftWorlds.log.log(Level.SEVERE,
-						"[CraftWorlds]: Found SQL Exception (on close)");
-			}
-		}
-
+		return true;
 	}
 
-	private void addWorld(CommandSender sender, String string, String string2) {
-		Connection conn = null;
-		Statement stmt = null;
-		int count = 0;
-		try {
-			conn = CWConnector.getConnection();
-			stmt = conn.createStatement();
-			count += stmt.executeUpdate("REPLACE INTO `worlds`"
-					+ " (`name`, `environment`, `enabled`)" + " VALUES ('"
-					+ string + "', '" + string2 + "', 'true')");
-			stmt.close();
-		} catch (SQLException ex) {
-			sender.sendMessage("[CraftWorlds] World did not save but is loaded.");
+	private String stringBuilder(String[] string) {
+		StringBuilder list = new StringBuilder();
+		for (String loop : string) {
+			list.append(loop + " ");
 		}
+		return list.toString();
 
 	}
 
