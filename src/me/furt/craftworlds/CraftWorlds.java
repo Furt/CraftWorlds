@@ -8,13 +8,13 @@ import java.util.logging.Logger;
 
 import javax.persistence.PersistenceException;
 
-import me.furt.craftworlds.commands.WeatherCommand;
 import me.furt.craftworlds.commands.WorldCommand;
 import me.furt.craftworlds.listeners.CWPlayerListener;
 import me.furt.craftworlds.sql.WorldTable;
 
 import org.bukkit.World;
 import org.bukkit.World.Environment;
+import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
@@ -30,6 +30,7 @@ public class CraftWorlds extends JavaPlugin {
 	public static final Logger log = Logger.getLogger("Minecraft");
 	public static PermissionHandler Permissions;
 	public CWPlayerListener PlayerListener = new CWPlayerListener(this);
+	public boolean permEnabled;
 
 	@Override
 	public void onDisable() {
@@ -48,7 +49,6 @@ public class CraftWorlds extends JavaPlugin {
 		this.setupDatabase();
 		this.loadWorlds();
 		getCommand("world").setExecutor(new WorldCommand(this));
-		getCommand("weather").setExecutor(new WeatherCommand(this));
 		PluginDescriptionFile pdfFile = this.getDescription();
 		log.info(pdfFile.getName() + " v" + pdfFile.getVersion()
 				+ " is enabled!");
@@ -62,8 +62,10 @@ public class CraftWorlds extends JavaPlugin {
 		if (CraftWorlds.Permissions == null) {
 			if (test != null) {
 				CraftWorlds.Permissions = ((Permissions) test).getHandler();
+				this.permEnabled = true;
 			} else {
-				log.info("Permission system not detected, defaulting to OP");
+				log.info("Permission plugin not detected, using internal permissions.");
+				this.permEnabled = false;
 			}
 		}
 	}
@@ -121,6 +123,16 @@ public class CraftWorlds extends JavaPlugin {
 		} else {
 			return true;
 		}
+	}
+	
+	public boolean hasPerm(CommandSender sender, Command cmd) {
+		if (this.permEnabled) {
+			if ((!sender.isOp()) && (sender instanceof Player)) {
+				Player p = (Player) sender;
+				return Permissions.has(p, "craftworld." + cmd);
+			}
+		}
+		return true;
 	}
 
 }

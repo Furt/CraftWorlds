@@ -80,11 +80,13 @@ public class WorldCommand implements CommandExecutor {
 				if (((World) plugin.getServer().getWorlds().get(i))
 						.getEnvironment() == World.Environment.NETHER)
 					color = ChatColor.RED;
-				else {
-					color = ChatColor.GREEN;
+				else if (((World) plugin.getServer().getWorlds().get(i))
+						.getEnvironment() == World.Environment.SKYLANDS) {
+					color = ChatColor.BLUE;
+				} else {
+					color = ChatColor.WHITE;
 				}
-				sender.sendMessage(color
-						+ ((World) plugin.getServer().getWorlds().get(i))
+				sender.sendMessage(color + ((World) plugin.getServer().getWorlds().get(i))
 								.getName());
 			}
 			return true;
@@ -110,6 +112,10 @@ public class WorldCommand implements CommandExecutor {
 			if (args.length > 2) {
 				if (args[2].equalsIgnoreCase("nether")) {
 					env = Environment.NETHER;
+				} else if (args[2].equalsIgnoreCase("skylands")) {
+					env = Environment.SKYLANDS;
+				} else {
+					env = Environment.NORMAL;
 				}
 
 				if (args[2].equalsIgnoreCase("seed")) {

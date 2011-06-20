@@ -66,7 +66,7 @@ public class CWPlayerListener extends PlayerListener {
 									"craftworlds."
 											+ world.getName().toLowerCase())) {
 								event.setTo(sl);
-								player.teleport(sl);
+								//player.teleport(sl);
 							} else {
 								player.sendMessage("You do not have permission to use that portal.");
 								return;

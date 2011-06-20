@@ -6,6 +6,8 @@ database: true
 description: A plugin that supports multiworld creation, teleport, and load.
 commands:
   world:
+    aliases:
+      - cw
     description: World commands
     usage: |
            /<command> [create] <world> <environment> <seed>
@@ -14,11 +16,3 @@ commands:
            /<command> [port] <world>
            /<command> [set] <world> [pvp]
            /<command> [set] <world> [toggle]
-  weather:
-    description: Weather commands
-    usage: |
-           /<command> [storm]
-           /<command> [duration]
-           /<command> [thunder] <duration>
-           /<command> [strike]
-           /<command> [strike] <player>
