@@ -50,8 +50,8 @@ public class CraftWorlds extends JavaPlugin {
 		this.loadWorlds();
 		getCommand("world").setExecutor(new WorldCommand(this));
 		PluginDescriptionFile pdfFile = this.getDescription();
-		log.info(pdfFile.getName() + " v" + pdfFile.getVersion()
-				+ " is enabled!");
+		log.info("[" + pdfFile.getName() + "] v" + pdfFile.getVersion()
+				+ " loaded");
 
 	}
 
