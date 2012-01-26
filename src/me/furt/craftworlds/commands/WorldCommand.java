@@ -7,6 +7,7 @@ import me.furt.craftworlds.sql.WorldTable;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.World;
+import org.bukkit.WorldCreator;
 import org.bukkit.World.Environment;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -23,17 +24,15 @@ public class WorldCommand implements CommandExecutor {
 	@Override
 	public boolean onCommand(CommandSender sender, Command command,
 			String label, String[] args) {
+		
 		if (args.length == 0)
 			return false;
 
 		if (args[0].equalsIgnoreCase("port")) {
-			if (plugin.isPlayer(sender)) {
-				if (!CraftWorlds.Permissions.has((Player) sender,
-						"craftworlds.port")) {
-					sender.sendMessage(ChatColor.YELLOW
-							+ "You to dont have proper permissions for that command.");
-					return true;
-				}
+			if (!plugin.hasPerm(sender, "port", false)) {
+				sender.sendMessage(ChatColor.YELLOW
+						+ "You do not have permission to use /" + label + " port");
+				return true;
 			}
 			if (!plugin.isPlayer(sender)) {
 				CraftWorlds.log
@@ -46,14 +45,11 @@ public class WorldCommand implements CommandExecutor {
 
 			World world = plugin.getServer().getWorld(args[1]);
 			if (world != null) {
-				if (plugin.isPlayer(sender)) {
-					if (!CraftWorlds.Permissions.has((Player) sender,
-							"craftworlds." + world.getName().toLowerCase())) {
+					if (!plugin.hasPerm(sender, world.getName().toLowerCase(), false)) {
 						sender.sendMessage(ChatColor.YELLOW
 								+ "You to dont have permission to teleport to that world.");
 						return true;
 					}
-				}
 				Player player = (Player) sender;
 				Location loc = new Teleport(plugin).getDestination(world
 						.getSpawnLocation());
@@ -65,13 +61,10 @@ public class WorldCommand implements CommandExecutor {
 		}
 
 		if (args[0].equalsIgnoreCase("list")) {
-			if (plugin.isPlayer(sender)) {
-				if (!CraftWorlds.Permissions.has((Player) sender,
-						"craftworlds.list")) {
-					sender.sendMessage(ChatColor.YELLOW
-							+ "You to dont have proper permissions for that command.");
-					return true;
-				}
+			if (!plugin.hasPerm(sender, "list", false)) {
+				sender.sendMessage(ChatColor.YELLOW
+						+ "You do not have permission to use /" + label + " list");
+				return true;
 			}
 			sender.sendMessage(ChatColor.YELLOW
 					+ "Worlds running on this Server");
@@ -81,7 +74,7 @@ public class WorldCommand implements CommandExecutor {
 						.getEnvironment() == World.Environment.NETHER)
 					color = ChatColor.RED;
 				else if (((World) plugin.getServer().getWorlds().get(i))
-						.getEnvironment() == World.Environment.SKYLANDS) {
+						.getEnvironment() == World.Environment.THE_END) {
 					color = ChatColor.BLUE;
 				} else {
 					color = ChatColor.WHITE;
@@ -93,13 +86,10 @@ public class WorldCommand implements CommandExecutor {
 		}
 
 		if (args[0].equalsIgnoreCase("create")) {
-			if (plugin.isPlayer(sender)) {
-				if (!CraftWorlds.Permissions.has((Player) sender,
-						"craftworlds.create")) {
-					sender.sendMessage(ChatColor.YELLOW
-							+ "You to dont have proper permissions for that command.");
-					return true;
-				}
+			if (!plugin.hasPerm(sender, "create", false)) {
+				sender.sendMessage(ChatColor.YELLOW
+						+ "You do not have permission to use /" + label + " create");
+				return true;
 			}
 
 			if (worldExists(args[1])) {
@@ -113,7 +103,7 @@ public class WorldCommand implements CommandExecutor {
 				if (args[2].equalsIgnoreCase("nether")) {
 					env = Environment.NETHER;
 				} else if (args[2].equalsIgnoreCase("skylands")) {
-					env = Environment.SKYLANDS;
+					env = Environment.THE_END;
 				} else {
 					env = Environment.NORMAL;
 				}
@@ -133,11 +123,12 @@ public class WorldCommand implements CommandExecutor {
 			}
 			plugin.getServer().broadcastMessage(
 					ChatColor.YELLOW + "Attempting to create a new world...");
-			if (seed == 0) {
-				plugin.getServer().createWorld(args[1], env);
-			} else {
-				plugin.getServer().createWorld(args[1], env, seed);
+			WorldCreator wc = WorldCreator.name(args[1]);
+			wc.environment(env);
+			if (seed != 0) {
+				wc.seed(seed);
 			}
+			plugin.getServer().createWorld(wc);
 
 			WorldTable wt = new WorldTable();
 			wt.setWorldName(args[1]);
@@ -153,13 +144,10 @@ public class WorldCommand implements CommandExecutor {
 		}
 
 		if (args[0].equalsIgnoreCase("delete")) {
-			if (plugin.isPlayer(sender)) {
-				if (!CraftWorlds.Permissions.has((Player) sender,
-						"craftworlds.delete")) {
-					sender.sendMessage(ChatColor.YELLOW
-							+ "You to dont have proper permissions for that command.");
-					return true;
-				}
+			if (!plugin.hasPerm(sender, "delete", false)) {
+				sender.sendMessage(ChatColor.YELLOW
+						+ "You do not have permission to use /" + label + " delete");
+				return true;
 			}
 
 			WorldTable wt = plugin.getDatabase().find(WorldTable.class).where()
@@ -176,13 +164,10 @@ public class WorldCommand implements CommandExecutor {
 		}
 
 		if (args[0].equalsIgnoreCase("set")) {
-			if (plugin.isPlayer(sender)) {
-				if (!CraftWorlds.Permissions.has((Player) sender,
-						"craftworlds.set")) {
-					sender.sendMessage(ChatColor.YELLOW
-							+ "You to dont have proper permissions for that command.");
-					return true;
-				}
+			if (!plugin.hasPerm(sender, "set", false)) {
+				sender.sendMessage(ChatColor.YELLOW
+						+ "You do not have permission to use /" + label + " set");
+				return true;
 			}
 			World world = plugin.getServer().getWorld(args[1]);
 			if (world == null) {

@@ -14,17 +14,20 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Sign;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerChatEvent;
-import org.bukkit.event.player.PlayerListener;
 import org.bukkit.event.player.PlayerMoveEvent;
 
-public class CWPlayerListener extends PlayerListener {
+public class CWPlayerListener implements Listener {
 	CraftWorlds plugin;
 
 	public CWPlayerListener(CraftWorlds instance) {
 		this.plugin = instance;
 	}
 
+	@EventHandler(priority = EventPriority.NORMAL)
 	public void onPlayerChat(PlayerChatEvent event) {
 		Player player = event.getPlayer();
 		String format = event.getFormat();
@@ -33,6 +36,7 @@ public class CWPlayerListener extends PlayerListener {
 				+ format);
 	}
 
+	@EventHandler(priority = EventPriority.NORMAL)
 	public void onPlayerMove(PlayerMoveEvent event) {
 		Player player = event.getPlayer();
 		Location l = player.getLocation();
@@ -62,11 +66,10 @@ public class CWPlayerListener extends PlayerListener {
 						if (sign.getLine(2).equalsIgnoreCase("spawn")) {
 							Location sl = new Teleport(plugin)
 									.getDestination(world.getSpawnLocation());
-							if (CraftWorlds.Permissions.has(player,
-									"craftworlds."
-											+ world.getName().toLowerCase())) {
+							if (plugin.hasPerm(player, "craftworlds."
+									+ world.getName().toLowerCase(), false)) {
 								event.setTo(sl);
-								//player.teleport(sl);
+								// player.teleport(sl);
 							} else {
 								player.sendMessage("You do not have permission to use that portal.");
 								return;

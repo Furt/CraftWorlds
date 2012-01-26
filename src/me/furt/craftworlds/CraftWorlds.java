@@ -14,21 +14,15 @@ import me.furt.craftworlds.sql.WorldTable;
 
 import org.bukkit.World;
 import org.bukkit.World.Environment;
-import org.bukkit.command.Command;
+import org.bukkit.WorldCreator;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.event.Event;
-import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import com.nijiko.permissions.PermissionHandler;
-import com.nijikokun.bukkit.Permissions.Permissions;
-
 public class CraftWorlds extends JavaPlugin {
 	public static final Logger log = Logger.getLogger("Minecraft");
-	public static PermissionHandler Permissions;
 	public CWPlayerListener PlayerListener = new CWPlayerListener(this);
 	public boolean permEnabled;
 
@@ -41,11 +35,7 @@ public class CraftWorlds extends JavaPlugin {
 	@Override
 	public void onEnable() {
 		PluginManager pm = getServer().getPluginManager();
-		pm.registerEvent(Event.Type.PLAYER_CHAT, this.PlayerListener,
-				Event.Priority.Monitor, this);
-		pm.registerEvent(Event.Type.PLAYER_MOVE, this.PlayerListener,
-				Event.Priority.Monitor, this);
-		this.setupPermissions();
+		pm.registerEvents(PlayerListener, this);
 		this.setupDatabase();
 		this.loadWorlds();
 		getCommand("world").setExecutor(new WorldCommand(this));
@@ -53,21 +43,6 @@ public class CraftWorlds extends JavaPlugin {
 		log.info("[" + pdfFile.getName() + "] v" + pdfFile.getVersion()
 				+ " loaded");
 
-	}
-
-	private void setupPermissions() {
-		Plugin test = this.getServer().getPluginManager()
-				.getPlugin("Permissions");
-
-		if (CraftWorlds.Permissions == null) {
-			if (test != null) {
-				CraftWorlds.Permissions = ((Permissions) test).getHandler();
-				this.permEnabled = true;
-			} else {
-				log.info("Permission plugin not detected, using internal permissions.");
-				this.permEnabled = false;
-			}
-		}
 	}
 
 	private void loadWorlds() {
@@ -79,12 +54,12 @@ public class CraftWorlds extends JavaPlugin {
 			String env = getWorld.get(i).getEnvironment();
 			long seed = getWorld.get(i).getSeed();
 			boolean pvp = getWorld.get(i).isPvpEnabled();
-			if (seed == 0) {
-				this.getServer().createWorld(wName, Environment.valueOf(env));
-			} else {
-				this.getServer().createWorld(wName, Environment.valueOf(env),
-						seed);
+			WorldCreator wc = WorldCreator.name(wName);
+			wc.environment(Environment.valueOf(env));
+			if (seed != 0) {
+				wc.seed(seed);
 			}
+			this.getServer().createWorld(wc);
 			World world = this.getServer().getWorld(wName);
 			world.setPVP(pvp);
 			this.getServer().broadcastMessage(
@@ -124,14 +99,30 @@ public class CraftWorlds extends JavaPlugin {
 			return true;
 		}
 	}
-	
-	public boolean hasPerm(CommandSender sender, Command cmd) {
-		if (this.permEnabled) {
-			if ((!sender.isOp()) && (sender instanceof Player)) {
-				Player p = (Player) sender;
-				return Permissions.has(p, "craftworld." + cmd);
-			}
+
+	public boolean hasPerm(CommandSender sender, String cmd,
+			boolean consoleUse) {
+		boolean perm = sender.hasPermission("craftworld." + cmd);
+
+		if (this.console(sender)) {
+			if (consoleUse)
+				return true;
+
+			log.info("[CraftWorlds] This command cannot be used in console.");
+			return false;
+		} else {
+			if (sender.isOp())
+				return true;
+
+			return perm;
 		}
+	}
+
+	public boolean console(CommandSender sender) {
+		if (sender instanceof Player) {
+			return false;
+		}
+		// Needs more checks
 		return true;
 	}
 
