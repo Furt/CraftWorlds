@@ -4,8 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Logger;
-
+import java.util.logging.Level;
 import javax.persistence.PersistenceException;
 
 import me.furt.craftworlds.commands.WorldCommand;
@@ -22,14 +21,13 @@ import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class CraftWorlds extends JavaPlugin {
-	public static final Logger log = Logger.getLogger("Minecraft");
 	public CWPlayerListener PlayerListener = new CWPlayerListener(this);
 	public boolean permEnabled;
 
 	@Override
 	public void onDisable() {
 		PluginDescriptionFile pdfFile = this.getDescription();
-		log.info(pdfFile.getName() + " Disabled");
+		this.logger(Level.INFO, "v" + pdfFile.getVersion() + " Disabled");
 	}
 
 	@Override
@@ -40,8 +38,7 @@ public class CraftWorlds extends JavaPlugin {
 		this.loadWorlds();
 		getCommand("world").setExecutor(new WorldCommand(this));
 		PluginDescriptionFile pdfFile = this.getDescription();
-		log.info("[" + pdfFile.getName() + "] v" + pdfFile.getVersion()
-				+ " loaded");
+		this.logger(Level.INFO, "v" + pdfFile.getVersion() + " Enabled");
 
 	}
 
@@ -80,7 +77,7 @@ public class CraftWorlds extends JavaPlugin {
 			}
 			getDatabase().find(WorldTable.class).findRowCount();
 		} catch (PersistenceException ex) {
-			System.out.println("[CraftWorld] Installing database.");
+			this.logger(Level.INFO, "Installing database.");
 			installDDL();
 		}
 	}
@@ -108,7 +105,7 @@ public class CraftWorlds extends JavaPlugin {
 			if (consoleUse)
 				return true;
 
-			log.info("[CraftWorlds] This command cannot be used in console.");
+			this.logger(Level.INFO, "This command cannot be used in console.");
 			return false;
 		} else {
 			if (sender.isOp())
@@ -124,6 +121,10 @@ public class CraftWorlds extends JavaPlugin {
 		}
 		// Needs more checks
 		return true;
+	}
+	
+	public void logger(Level l, String s) {
+		this.getLogger().log(l, "[CraftWorlds] " + s);
 	}
 
 }

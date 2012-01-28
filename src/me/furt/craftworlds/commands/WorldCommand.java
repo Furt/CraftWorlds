@@ -1,5 +1,7 @@
 package me.furt.craftworlds.commands;
 
+import java.util.logging.Level;
+
 import me.furt.craftworlds.CraftWorlds;
 import me.furt.craftworlds.Teleport;
 import me.furt.craftworlds.sql.WorldTable;
@@ -35,8 +37,7 @@ public class WorldCommand implements CommandExecutor {
 				return true;
 			}
 			if (!plugin.isPlayer(sender)) {
-				CraftWorlds.log
-						.info("[CraftWorlds] Cannot use /world port from console.");
+				plugin.logger(Level.INFO, "Cannot use /world port from console.");
 				return true;
 			}
 
