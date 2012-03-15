@@ -36,7 +36,7 @@ public class CraftWorlds extends JavaPlugin {
 		pm.registerEvents(PlayerListener, this);
 		this.setupDatabase();
 		this.loadWorlds();
-		getCommand("world").setExecutor(new WorldCommand(this));
+		getCommand("craftworlds").setExecutor(new WorldCommand(this));
 		PluginDescriptionFile pdfFile = this.getDescription();
 		this.logger(Level.INFO, "v" + pdfFile.getVersion() + " Enabled");
 

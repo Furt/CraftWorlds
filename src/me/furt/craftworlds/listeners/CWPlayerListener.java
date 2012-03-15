@@ -69,6 +69,7 @@ public class CWPlayerListener implements Listener {
 							if (plugin.hasPerm(player, "craftworlds."
 									+ world.getName().toLowerCase(), false)) {
 								event.setTo(sl);
+								event.getPlayer().teleport(sl);
 								// player.teleport(sl);
 							} else {
 								player.sendMessage("You do not have permission to use that portal.");

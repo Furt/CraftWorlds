@@ -5,7 +5,7 @@ author: furt
 database: true
 description: A plugin that supports multiworld creation, teleport, and load.
 commands:
-  world:
+  craftworlds:
     aliases:
       - cw
     description: World commands
