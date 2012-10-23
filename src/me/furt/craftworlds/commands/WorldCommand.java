@@ -26,18 +26,20 @@ public class WorldCommand implements CommandExecutor {
 	@Override
 	public boolean onCommand(CommandSender sender, Command command,
 			String label, String[] args) {
-		
+
 		if (args.length == 0)
 			return false;
 
 		if (args[0].equalsIgnoreCase("port")) {
 			if (!plugin.hasPerm(sender, "port", false)) {
 				sender.sendMessage(ChatColor.YELLOW
-						+ "You do not have permission to use /" + label + " port");
+						+ "You do not have permission to use /" + label
+						+ " port");
 				return true;
 			}
 			if (!plugin.isPlayer(sender)) {
-				plugin.logger(Level.INFO, "Cannot use /world port from console.");
+				plugin.logger(Level.INFO,
+						"Cannot use /world port from console.");
 				return true;
 			}
 
@@ -46,11 +48,12 @@ public class WorldCommand implements CommandExecutor {
 
 			World world = plugin.getServer().getWorld(args[1]);
 			if (world != null) {
-					if (!plugin.hasPerm(sender, world.getName().toLowerCase(), false)) {
-						sender.sendMessage(ChatColor.YELLOW
-								+ "You to dont have permission to teleport to that world.");
-						return true;
-					}
+				if (!plugin.hasPerm(sender, world.getName().toLowerCase(),
+						false)) {
+					sender.sendMessage(ChatColor.YELLOW
+							+ "You to dont have permission to teleport to that world.");
+					return true;
+				}
 				Player player = (Player) sender;
 				Location loc = new Teleport(plugin).getDestination(world
 						.getSpawnLocation());
@@ -59,12 +62,13 @@ public class WorldCommand implements CommandExecutor {
 				sender.sendMessage("World not found.");
 			}
 			return true;
-		}
+		} else
 
 		if (args[0].equalsIgnoreCase("list")) {
 			if (!plugin.hasPerm(sender, "list", false)) {
 				sender.sendMessage(ChatColor.YELLOW
-						+ "You do not have permission to use /" + label + " list");
+						+ "You do not have permission to use /" + label
+						+ " list");
 				return true;
 			}
 			sender.sendMessage(ChatColor.YELLOW
@@ -80,16 +84,18 @@ public class WorldCommand implements CommandExecutor {
 				} else {
 					color = ChatColor.WHITE;
 				}
-				sender.sendMessage(color + ((World) plugin.getServer().getWorlds().get(i))
+				sender.sendMessage(color
+						+ ((World) plugin.getServer().getWorlds().get(i))
 								.getName());
 			}
 			return true;
-		}
+		} else
 
 		if (args[0].equalsIgnoreCase("create")) {
 			if (!plugin.hasPerm(sender, "create", false)) {
 				sender.sendMessage(ChatColor.YELLOW
-						+ "You do not have permission to use /" + label + " create");
+						+ "You do not have permission to use /" + label
+						+ " create");
 				return true;
 			}
 
@@ -103,7 +109,7 @@ public class WorldCommand implements CommandExecutor {
 			if (args.length > 2) {
 				if (args[2].equalsIgnoreCase("nether")) {
 					env = Environment.NETHER;
-				} else if (args[2].equalsIgnoreCase("skylands")) {
+				} else if (args[2].equalsIgnoreCase("theend")) {
 					env = Environment.THE_END;
 				} else {
 					env = Environment.NORMAL;
@@ -142,12 +148,17 @@ public class WorldCommand implements CommandExecutor {
 			plugin.getServer().broadcastMessage(
 					ChatColor.YELLOW + args[1] + " created!");
 			return true;
-		}
-
+		} else
+			
+		if (args[0].equalsIgnoreCase("unload")) {
+			
+		} else
+			
 		if (args[0].equalsIgnoreCase("delete")) {
 			if (!plugin.hasPerm(sender, "delete", false)) {
 				sender.sendMessage(ChatColor.YELLOW
-						+ "You do not have permission to use /" + label + " delete");
+						+ "You do not have permission to use /" + label
+						+ " delete");
 				return true;
 			}
 
@@ -162,12 +173,13 @@ public class WorldCommand implements CommandExecutor {
 						+ " not found, did you spell it correctly?");
 			}
 			return true;
-		}
+		} else
 
 		if (args[0].equalsIgnoreCase("set")) {
 			if (!plugin.hasPerm(sender, "set", false)) {
 				sender.sendMessage(ChatColor.YELLOW
-						+ "You do not have permission to use /" + label + " set");
+						+ "You do not have permission to use /" + label
+						+ " set");
 				return true;
 			}
 			World world = plugin.getServer().getWorld(args[1]);
